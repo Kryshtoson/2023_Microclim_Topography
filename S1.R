@@ -42,6 +42,7 @@ tibble(
 #' - calculation of M.V.s
 #' - extraction of the value of the target cell
 #' ||
+#' ||
 #' - two-level loop:
 #' - - first iteration goes resolution-wise and in the end stores values into separate csv files
 #' - - second iteration goes plot-wise
