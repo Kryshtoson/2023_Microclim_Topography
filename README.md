@@ -6,8 +6,9 @@
 * `S1.R`: Preparation of morphometric variables.
 * `S2.R`: Manipulation of the species data.
 * `S3.R`: Models of each morphometric variable over spatial resolutions.
-* `S4.R`: Models using combinations of morphometric variables as predictors.
-* `S5.R`: Extracting information used in the paper itself.
+* `S4.R`: Fitting models using combinations of morphometric variables as predictors.
+* `S5.R`: Plotting models using combinations of morphometric variables as predictors.
+* `S6.R`: Extracting information used in the paper itself.
 
 
 * `raw_input`
@@ -114,5 +115,12 @@
 
 
 #### `S5.R`
+
+* uses models created in `S4.R` and plots them (Figures 2 and 3)
+* in addition, plots also the relationship between variation explained by these models and elevation (Figure 4)
+
+
+
+#### `S6.R`
 
 * uses the outputs of scripts `S3.R` and `S4.R`, i.e., results, to derive information referred to in the main paper.

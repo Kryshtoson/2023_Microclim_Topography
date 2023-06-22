@@ -1,182 +1,231 @@
 #-------------------------------------------------------------------------
-# START OF THE CODE S5
+# START OF SCRIPT S4
 #-------------------------------------------------------------------------
+library(DSSAT)
 library(tidyverse)
-species_resolution_models <- read_csv('results\\models_resolution_species_postprop.csv')
-comprops_resolution_models <- read_csv('results\\models_resolution_comprops_postprop.csv')
+library(ggrepel)
 
-#' "Across all species, the variation in their distribution explained by one morphometric variable
-#' alone at one scale varied between 0.0% and 31.2% (pseudo-R² values)"
-round(range(species_resolution_models$dev_explained * 100), 2)
-#> 0.00, 30.98
-
-#' while the variation explained by elevation varied between
-round(range(species_resolution_models$null_mod * 100), 2)
-
-#' TWI had the highest pseudo-R2 values averaged over all species (Figure 1A)
-#' at resolutions from 71 to 301 m (71: 5.8%, 101: 6.2%, 151: 6.6%, 201: 5.7% and 301: 6.0%
-#' followed by TP5 (301: 5.7%), SLP (101: 5.7%)
-#' and VR5 (151 and 201: 5.6%).
-species_resolution_models |>
-  group_by(index, resolution) |>
-  summarise_at('dev_explained', mean) |>
-  arrange(-dev_explained) |>
-  mutate(dev_explained = round(dev_explained*100, 1)) |>
-  print(n = 20)
-
-#' Fine-scale morphometric parameters with the highest pseudo-R² values were
-#' TR5 (19: 4.8% and 15: 4.7%),
-#' SLP (19: 4.8% and 15: 4.6%)
-#' and TR3 (19: 4.6% and 15: 4.3).
-species_resolution_models |>
-  group_by(index, resolution) |>
-  summarise_at('dev_explained', mean) |>
-  arrange(-dev_explained) |>
-  filter(resolution < 25) |>
-  mutate(dev_explained = round(dev_explained*100, 1)) |>
-  print(n = 20)
-
-#' For community attributes, the variance explained by models
-#' including a single morphometric variable at one resolution ranged from 0.01% to 19.48%
-round(range(comprops_resolution_models$dev_explained * 100), 2)
-
-#' while the variation explained by elevation varied between 7.52% and 78.99%
-round(range(comprops_resolution_models$null_mod * 100), 2)
-
-#' In general, community attributes were on average (Figure 1B) best explained by
-#' VR5 (6.6% at 151 m) and VR3 (6.4% at 201 m and 6.0% at 151 m).
-comprops_resolution_models |>
-  group_by(index, resolution) |>
-  summarise_at('dev_explained', mean) |>
-  arrange(-dev_explained) |>
-  mutate(dev_explained = round(dev_explained*100, 1)) |>
-  print(n = 20)
-
-#' Best performing variables at fine resolutions were TR5 (15: 4.0%, 19: 4.0%), TR3 (19: 3.9%) and HLI (7: 3.8%)
-comprops_resolution_models |>
-  group_by(index, resolution) |>
-  summarise_at('dev_explained', mean) |>
-  arrange(-dev_explained) |>
-  filter(resolution < 25) |>
-  mutate(dev_explained = round(dev_explained*100, 1)) |>
-  print(n = 20)
-
-#' ========================================================================================
-#' random models
-#' ========================================================================================
-random_mods_species <- read_csv('data\\SPECIES_random_models.csv') |>
-  left_join(read_csv(paste0('data\\SPECIES_elevation_models.csv'))) |>
+# -------------------------------------------------------------------------
+# DATA TO PLOT
+# -------------------------------------------------------------------------
+# SPECIES
+# -------------------------------------------------------------------------
+read_csv('results\\SPECIES_random_models.csv') |>
+  left_join(read_csv(paste0('results\\SPECIES_elevation_models.csv'))) |>
     mutate(r2_elevation_pure = rsq_full - rsq,
            r2_topography_pure = rsq_full - elevation_only) |>
-  arrange(-r2_topography_pure) %>%
-    group_by(species, group) %>%
-    slice(1)
+    arrange(-r2_topography_pure) |>
+    group_by(species, group) |>
+    slice(1) |>
+    select(species, name = group, elevation_only, value = r2_topography_pure) |>
+    pivot_wider() |>
+    mutate(gr = fine > coarse) |>
+    pivot_longer(c(all, coarse, fine),
+                 names_to = 'group', values_to = 'r2_topography_pure') |>
+    ungroup() |>
+    mutate(species = fct_reorder(.f = species, .x = r2_topography_pure, .fun = max)) -> SPECIES_step
+  list('all' = SPECIES_step |> filter(group == 'all'),
+       'butall' = SPECIES_step |> filter(group != 'all')) -> SPECIES_out
 
-random_mods_comprops <- read_csv('data\\COMPROPS_random_models.csv') |>
-  left_join(read_csv(paste0('data\\COMPROPS_elevation_models.csv'))) |>
+# -------------------------------------------------------------------------
+# DATA TO PLOT
+# -------------------------------------------------------------------------
+# COMPROPS
+# -------------------------------------------------------------------------
+read_csv('results\\COMPROPS_random_models.csv') |>
+  left_join(read_csv(paste0('results\\COMPROPS_elevation_models.csv'))) |>
+  mutate(species = fct_recode(species,
+                        'EIV Moisture' = 'Moisture',
+                        'EIV Reaction' = 'Reaction',
+                        'EIV Nutrients' = 'Nutrients',
+                        'EIV Temperature' = 'Temperature',
+                        'CM Succulency' = 'trait_suc',
+                        'CM Vegetative Height' = 'trait_height',
+                        'CM Leaf Nitrogen' = 'trait_N',
+                        'CM Specific Leaf Area' = 'trait_sla',
+                        'Species Richness' = 'sp_richness',
+                        "Shannon's Diversity"  = 'Shannon')) |>
     mutate(r2_elevation_pure = rsq_full - rsq,
            r2_topography_pure = rsq_full - elevation_only) |>
-  arrange(-r2_topography_pure) %>%
-    group_by(species, group) %>%
-    slice(1)
+    arrange(-r2_topography_pure) |>
+    group_by(species, group) |>
+    slice(1) |>
+    select(species, name = group, value = r2_topography_pure) |>
+    pivot_wider() |>
+    mutate(gr = fine > coarse) |>
+    pivot_longer(c(all, coarse, fine),
+                 names_to = 'group', values_to = 'r2_topography_pure') |>
+    ungroup() |>
+    mutate(species = fct_reorder(.f = species, .x = r2_topography_pure, .fun = max)) -> COMPROPS_step
 
-#' The best of the 1,000 models with combinations of five predictors per response variable explained
-#' the distribution of 56 (out of 79) species better with coarse than with fine-scale predictor variables
-#' (Figure 2). Combining Mixing fine and coarse resolutions only marginally increased the explained
-#' variation (of the better model) by 1.2% on average across all species. Models of species distribution
-#' using only fine-resolution morphometric variables were most effective in (...)
-#' Models with coarse resolution morphometric variables best predicted the distributions of (...)
-#' Models with a combination mix of different all resolutions best explained the distributions of (...)
-random_mods_species |>
-  select(species, r2_topography_pure) |>
-  mutate(r2_topography_pure = round(r2_topography_pure * 100, 2)) |>
-  ungroup() |>
-  arrange(-r2_topography_pure) |>
-  mutate(group = factor(group, levels = c('fine', 'coarse', 'all'))) |>
-  group_by(group) |>
-  slice(1:10) |>
-  mutate(label = paste0(species, ' (', r2_topography_pure, '%)')) |>
-  select(label) |>
-  group_split() |>
-  map(~.x |> pull() |> paste(collapse = ', '))
+list('all' = COMPROPS_step |> filter(group == 'all'),
+       'butall' = COMPROPS_step |> filter(group != 'all')) -> COMPROPS_out
 
-#' On average, elevation alone explained more of the variation in species distribution
-#' than the combination of five morphometric predictors in 43 species,
-#' i.e., approximately half of all species (Fig. 4, Appendix S2).
-#' On average, the best model using five morphometric predictors explained 15.2% of the variation,
-#' vs. 14.1% explained by elevation alone.
-random_mods_species |>
-  group_by(species) |>
-  arrange(-r2_topography_pure) |>
-  slice(1) |>
-  group_by(species) |>
-  mutate(diff = round((r2_elevation_pure - r2_topography_pure) * 100, 2)) |>
-  filter(0<diff) |> nrow()
+dem <- theme(
+  axis.text.y = element_text(face = 'italic'),
+  axis.title.y = element_blank(),
+  axis.text = element_text(size = 12),
+  axis.text.x = element_text(hjust = .3),
+  plot.title = element_text(size = 18),
+  strip.background = element_blank(),
+  legend.position = c(1, 1),
+  legend.background = element_blank(),
+  legend.justification = c(1, 1),
+  legend.title = element_blank(),
+  legend.text = element_text(size = 14),
+  strip.text = element_blank())
 
-#' On average across all species, the best model using five morphometric predictors
-#' explained 15.7% of the variation, vs. 12.5% explained by elevation alone.
-random_mods_species |>
-  group_by(species) |>
-  arrange(-r2_topography_pure) |>
-  slice(1) |>
-  ungroup() |>
-  summarise_at(c('r2_topography_pure', 'r2_elevation_pure'), ~mean(round(.x*100, 2)))
+# -------------------------------------------------------------------------
+# PLOTTING
+# -------------------------------------------------------------------------
+# SPECIES
+# -------------------------------------------------------------------------
+SPECIES_out$butall |>
+  mutate_cond(r2_topography_pure < 0, r2_topography_pure = 0) |>
+  mutate(group = factor(group, levels = c('coarse', 'fine', 'combined'))) |>
+  ggplot(aes(species, r2_topography_pure)) +
+  facet_grid(gr ~ ., scales = 'free_y', space = 'free_y') +
+  coord_flip() +
+  geom_bar(aes(fill = group),
+           stat = 'identity',
+           position = position_dodge(width = .8)) +
+  geom_point(data = SPECIES_out$all, shape = 23, fill = 'red', size = 4) +
+  geom_hline(yintercept = 0, colour = 'blue') +
+  scale_x_discrete(limits = rev) +
+  scale_y_continuous(breaks = c(0, .05, .1, 0.15, 0.2, 0.25, 0.3, .35, .4, .45, .5, .55),
+                     labels = c('0%', '5%', '10%', '15%', '20%', '25%', '30%', '35%', '40%', '45%', '50%', '55%'),
+                     expand = c(0, 0, .03, 0)) +
+  scale_fill_manual(values = c('#51718C', '#F2B33D', 'red'), drop = F) +
+  labs(y = 'Variation explained by topography') +
+  theme_bw() +
+  dem
 
-#' Species where morphometric variables explained more than elevation included
-random_mods_species |>
-  group_by(species) |>
-  arrange(-r2_topography_pure) |>
-  slice(1) |>
-  ungroup() |>
-  mutate(diff = round((r2_topography_pure-r2_elevation_pure) * 100, 2)) |>
-  select(species, diff, r2_elevation_pure, r2_topography_pure) |>
-  arrange(-diff) |>
-  slice(1:8) |>
-  mutate(label = paste0(species, ' (', diff, '%)')) |> pull(label) |>
-  paste(collapse = ', ')
+ggsave('results//figures//Figure2.png', height = 16, width = 9.5)
 
-#' In contrast species for which the distribution was better explained by elevation than topography
-#' were mostly subalpine and nival species that dominate either
-#' at very low or very high elevation in the study area, such as
-random_mods_species |>
-  group_by(species) |>
-  arrange(-r2_topography_pure) |>
-  slice(1) |>
-  ungroup() |>
-  mutate(diff = round((r2_elevation_pure-r2_topography_pure) * 100, 2)) |>
-  select(species, diff, r2_elevation_pure, r2_topography_pure) |>
-  arrange(-diff) |>
-  slice(1:8) |>
-  mutate(label = paste0(species, ' (', diff, '%)')) |> pull(label) |>
-  paste(collapse = ', ')
+# -------------------------------------------------------------------------
+# PLOTTING
+# -------------------------------------------------------------------------
+# COMPROPS
+# -------------------------------------------------------------------------
+COMPROPS_out$butall |>
+  mutate_cond(r2_topography_pure < 0, r2_topography_pure = 0) |>
+  mutate(group = factor(group, levels = c('coarse', 'fine', 'combined'))) |>
+  filter(group != 'all') |>
+  ggplot(aes(species, r2_topography_pure)) +
+  coord_flip() +
+  geom_bar(aes(fill = group), stat = 'identity', position = position_dodge(width = .8)) +
+  geom_point(data = COMPROPS_out$all , shape = 23, fill = 'red', size = 4) +
+  geom_hline(yintercept = 0, colour = 'blue') +
+  scale_x_discrete(limits=rev) +
+  scale_y_continuous(breaks = c(0, .05, .1, 0.15, 0.2, 0.25, 0.3, .35,.4, .45, .5, .55),
+                     labels = c('0%', '5%', '10%', '15%', '20%', '25%', '30%', '35%', '40%', '45%', '50%', '55%'),
+                     expand = c(0,0,.03,0)) +
+  scale_fill_manual(values = c('#51718C', '#F2B33D', 'red'), drop = F) +
+  # expand_limits(y = c(-0.022, .34)) +
+  labs(y = 'Variation explained by topography') +
+  theme_bw() + dem
 
-#' =======================================================================
-random_mods_comprops |>
-  select(species, r2_topography_pure) |>
-  mutate(r2_topography_pure = round(r2_topography_pure * 100, 2)) |>
-  ungroup() |>
-  arrange(-r2_topography_pure) |>
-  mutate(group = factor(group, levels = c('fine', 'coarse', 'all'))) |>
-  group_by(group) |>
-  slice(1:10) |>
-  mutate(label = paste0(species, ' (', r2_topography_pure, '%)')) |>
-  select(label) |>
-  group_split() |>
-  map(~.x |> pull() |> paste(collapse = ', '))
+ggsave('results//figures//Figure3.png', height = 5, width = 9.5)
 
-#'However, community attributes were distinct in their relation to morphometric variables
-random_mods_comprops |>
-  group_by(species) |>
-  arrange(-r2_topography_pure) |>
-  slice(1) |>
-  ungroup() |>
-  mutate(diff = round((r2_elevation_pure-r2_topography_pure) * 100, 2),
-         r2_elevation_pure = round(r2_elevation_pure*100, 2),
-  r2_topography_pure = round(r2_topography_pure*100, 2),
-         rsq_full = round(rsq_full*100, 2),
-  shared = rsq_full - (r2_elevation_pure + r2_topography_pure)) |>
-  arrange(-diff) |>
-  select(species, diff, r2_elevation_pure, r2_topography_pure, shared)
-#-------------------------------------------------------------------------
-# END OF THE CODE S5
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# PLOTTING
+# -------------------------------------------------------------------------
+# USING THE BEST MODELS TO PLOT FIGURE 4
+# -------------------------------------------------------------------------
+shcut <- function(names){
+  names <- lapply(strsplit(names, "\\ "), function(x) substring(x, 1, 1))
+  names <- lapply(names,
+                  function(x){paste(unlist(x)[1], unlist(x)[2], sep = "")})
+  unlist(names)
+}
+
+
+read_csv('results\\SPECIES_random_models.csv') |>
+  left_join(read_csv(paste0('results\\SPECIES_elevation_models.csv'))) |>
+    mutate(r2_elevation_pure = rsq_full - rsq,
+           r2_topography_pure = rsq_full - elevation_only) |>
+    arrange(-r2_topography_pure) |>
+    group_by(species, group) |>
+    mutate(macro = 'Distribution of species') |>
+    slice(1) -> best_models_species
+
+read_csv('results\\COMPROPS_random_models.csv') |>
+  left_join(read_csv(paste0('results\\COMPROPS_elevation_models.csv'))) |>
+    mutate(r2_elevation_pure = rsq_full - rsq,
+           r2_topography_pure = rsq_full - elevation_only) |>
+    arrange(-r2_topography_pure) |>
+    group_by(species, group) |>
+    mutate(macro = 'Variation in community attributes') |>
+    slice(1) -> best_models_comprops
+
+bind_rows(best_models_species, best_models_comprops) |>
+  mutate(group = factor(group,
+                        levels = c('fine', 'coarse'),
+                        labels = c('Fine resolution', 'Coarse resolution'))) |>
+  filter(group %in% c('Coarse resolution', 'Fine resolution')) |>
+  mutate(species_abb = shcut(species)) -> step
+
+step |>
+  ggplot(aes(r2_topography_pure, r2_elevation_pure))  +
+  geom_abline (slope=1, linetype = "dashed", color="Red") +
+  geom_point() +
+  geom_text_repel(data = step |>
+               filter(macro != 'Distribution of species') |>
+                 mutate(species = fct_recode(species,
+                                       'EIV Moisture' = 'Moisture',
+                                       'EIV Reaction' = 'Reaction',
+                                       'EIV Nutrients' = 'Nutrients',
+                                       'EIV Temperature' = 'Temperature',
+                                       'CM Suculency' = 'trait_suc',
+                                       'CM Vegetative Height' = 'trait_height',
+                                       'CM Leaft Nitrogen' = 'trait_N',
+                                       'CM Specific Leaf Area' = 'trait_sla',
+                                       'Species Richness' = 'sp_richness',
+                                       "Shannon's Diversity" = 'Shannon')),
+               aes(label = species)) + geom_text_repel(data = step |>
+                    filter(macro == 'Distribution of species') |>
+                    filter(species %in% c('Gnaphalium supinum',
+                           'Deschampsia cespitosa',
+                           'Geum reptans',
+                           'Vaccinium vitis-idaea',
+                           'Cirsium spinossisimum',
+                           'Festuca melanopsis',
+                           'Helictochloa versicolor',
+                           'Primula minima',
+                           'Agrostis schraderiana',
+                           'Kobresia myosuroides',
+                           'Oreochloa disticha',
+                           'Poa laxa',
+                           'Ranunculus glacialis',
+                           'Avenula flexuosa',
+                           'Saxifraga bryoides',
+                           'Achillea erba-rotta subsp. moschata',
+                           'Festuca nigrescens',
+                           'Avenulla flexuosa',
+                           'Rhododendron ferrugineum',
+                           'Carex curvula')),
+                           colour = 'red', fontface = 'italic',
+                  max.overlaps = Inf,
+                  aes(label = species_abb)) +
+  theme_bw() +
+  expand_limits(x = c(0, .65), y = c(0, .65)) +
+  scale_y_continuous(expand = c(0,0),
+                     breaks = c(0:7/10),
+                     labels = paste0((0:7)*10, '%')) +
+  scale_x_continuous(expand = c(0,0),
+                     breaks = c(0:7/10),
+                     labels = paste0((0:7)*10, '%')) +
+  #geom_text_repel(aes(label = species)) +
+  facet_grid(macro~group) +
+  labs(y = 'Variation explained by elevation',
+       x = 'Variation explained by topography') +
+  theme(strip.background = element_blank(),
+        strip.placement = 'outside',
+        strip.text = element_text(hjust = 0, size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 14))
+ggsave('results//figures//Figure4.png', width = 10.5, height = 9)
+
+#------------------------------------------------------------------------
+# END OF SCRIPT S5
+#------------------------------------------------------------------------
