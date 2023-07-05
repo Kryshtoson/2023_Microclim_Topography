@@ -2,8 +2,8 @@
 # START OF THE CODE S5
 #-------------------------------------------------------------------------
 library(tidyverse)
-species_resolution_models <- read_csv('results\\models_resolution_species_postprop.csv')
-comprops_resolution_models <- read_csv('results\\models_resolution_comprops_postprop.csv')
+species_resolution_models <- read_csv('results\\meta_results\\models_resolution_species.csv')
+comprops_resolution_models <- read_csv('results\\meta_results\\models_resolution_comprops.csv')
 
 #' "Across all species, the variation in their distribution explained by one morphometric variable
 #' alone at one scale varied between 0.0% and 31.2% (pseudo-R² values)"
@@ -64,16 +64,16 @@ comprops_resolution_models |>
 #' ========================================================================================
 #' random models
 #' ========================================================================================
-random_mods_species <- read_csv('data\\SPECIES_random_models.csv') |>
-  left_join(read_csv(paste0('data\\SPECIES_elevation_models.csv'))) |>
+random_mods_species <- read_csv('results\\SPECIES_random_models.csv') |>
+  left_join(read_csv(paste0('results\\SPECIES_elevation_models.csv'))) |>
     mutate(r2_elevation_pure = rsq_full - rsq,
            r2_topography_pure = rsq_full - elevation_only) |>
   arrange(-r2_topography_pure) %>%
     group_by(species, group) %>%
     slice(1)
 
-random_mods_comprops <- read_csv('data\\COMPROPS_random_models.csv') |>
-  left_join(read_csv(paste0('data\\COMPROPS_elevation_models.csv'))) |>
+random_mods_comprops <- read_csv('results\\COMPROPS_random_models.csv') |>
+  left_join(read_csv(paste0('results\\COMPROPS_elevation_models.csv'))) |>
     mutate(r2_elevation_pure = rsq_full - rsq,
            r2_topography_pure = rsq_full - elevation_only) |>
   arrange(-r2_topography_pure) %>%
@@ -122,7 +122,10 @@ random_mods_species |>
   ungroup() |>
   summarise_at(c('r2_topography_pure', 'r2_elevation_pure'), ~mean(round(.x*100, 2)))
 
-#' Species where morphometric variables explained more than elevation included
+#' Species where morphometric variables explained more than elevation included:
+#' "Achillea erba-rotta subsp. moschata (25.93%), Oreochloa disticha (21.47%),
+#' Trifolium pallescens (19.64%), Geum montanum (18.98%), Carex curvula (18.8%),
+#' Jacobaea carniolica (18.42%), Primula glutinosa (17.8%), Salix helvetica (17.59%)"
 random_mods_species |>
   group_by(species) |>
   arrange(-r2_topography_pure) |>
@@ -138,6 +141,10 @@ random_mods_species |>
 #' In contrast species for which the distribution was better explained by elevation than topography
 #' were mostly subalpine and nival species that dominate either
 #' at very low or very high elevation in the study area, such as
+#' "Rhododendron ferrugineum (23.2%), Avenella flexuosa (19.47%),
+#' Poa laxa (19.33%), Festuca nigrescens (18.84%),
+#' Leucanthemopsis alpina (11.18%), Saxifraga bryoides (10.69%),
+#' Ranunculus glacialis (9.49%), Leontodon hispidus (8.54%)"
 random_mods_species |>
   group_by(species) |>
   arrange(-r2_topography_pure) |>

@@ -224,6 +224,7 @@ step |>
         strip.text = element_text(hjust = 0, size = 14),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 14))
+
 ggsave('results//figures//Figure4.png', width = 10.5, height = 9)
 
 #------------------------------------------------------------------------

@@ -1,24 +1,25 @@
 #-------------------------------------------------------------------------
 # START OF SCRIPT S4
 #-------------------------------------------------------------------------
+library(tictoc)
+tic()
 library(DSSAT)
 library(tidyverse)
 library(furrr)
 library(readxl)
 library(ggrepel)
-library(tictoc)
 options(warn = -1)
 
 spe <- read_csv('data\\species_data_wide.csv')
 head <- read_csv('data\\Morphometric_parameters_bank.csv')
 comprop <- read_csv('data\\Comprop_means.csv')
-
+dir.create('results\\meta_results\\random_models')
 # -------------------------------------------------------------------------
 # CREATING RANDOM PREDICTORS FOR MODELS
 # -------------------------------------------------------------------------
 selected_combinations <- gsub(' ', '', apply(
   expand.grid(
-    c('SLP', 'PCR', 'PRC', 'TLC', 'TP5', 'TR5', 'VR3', 'HLI', 'SRI', 'TWI', 'MDI'),
+    c('SLP', 'PCR', 'PLC', 'TLC', 'TP5', 'TR5', 'VR3', 'HLI', 'SRI', 'TWI', 'MDI'),
     c(1, 3, 7, 15, 19, 25, 31, 51, 71, 101, 151, 201, 301)),
   1, paste, sep = '', collapse = '_'))
 
@@ -56,11 +57,9 @@ predictors <- function(source) {
   bank <- bank |> discard(is.null)
 }
 
-tic()
 bank_fine <- predictors(source = indexbank_fine)
 bank_coarse <- predictors(source = indexbank_coarse)
 bank_all <- predictors(source = indexbank)
-toc() #'
 
 # -------------------------------------------------------------------------
 # SUBSETTING SPECIES USED FOR THE ANALYSIS
@@ -152,6 +151,8 @@ map2(
 # -------------------------------------------------------------------------
 # ACTUAL MODELS, SPECIES (FASTER THAN SPECIES)
 # -------------------------------------------------------------------------
+plan(sequential)
+plan(multisession, workers = availableCores() - 1)
 ls <- list()
 for (y in 1:3) {
   cat(paste0('\ngroup = ', y, '/3:'))
@@ -271,7 +272,7 @@ spe %>%
   ungroup() %>%
   select(species, elevation_only) %>%
   write_csv('results\\SPECIES_elevation_models.csv')
-
+toc()
 #-------------------------------------------------------------------------
 # END OF SCRIPT S4
 #-------------------------------------------------------------------------

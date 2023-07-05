@@ -130,12 +130,12 @@ species_out %>% write_csv('results\\meta_results\\models_resolution_comprops.csv
 # -------------------------------------------------------------------------
 df <- read_csv('results\\meta_results\\models_resolution_species.csv') %>%
   mutate_cond(dev_explained < 0, dev_explained = NA) %>%
-  mutate(index2 = fct_recode(factor(index, levels = c('SLP', 'PCR', 'PRC', 'TLC', 'TP3',
+  mutate(index2 = fct_recode(factor(index, levels = c('SLP', 'PLC', 'PRC', 'TLC', 'TP3',
                                                       'TP5', 'TR3', 'TR5', 'VR3', 'VR5',
                                                       'HLI', 'MSVF', 'MVS', 'MBI', 'MDI',
                                                       'HSD', 'TWI')),
                              Slope = 'SLP',
-                             `Planform Curvature` = 'PCR',
+                             `Planform Curvature` = 'PLC',
                              `Profile Curvature` = 'PRC',
                              `Total Curvature` = 'TLC',
                              `Topographic position index 3×3` = 'TP3',
@@ -199,7 +199,7 @@ ggsave('results\\figures\\Figure1A.png', height = 6, width = 9)
 # Community attributes plotting
 #-------------------------------------------------------------------------
 
-cf <- read_csv('results\\models_resolution_comprops.csv') %>%
+cf <- read_csv('results\\meta_results\\models_resolution_comprops.csv') %>%
   mutate(species = fct_recode(species,
                               'EIV Moisture' = 'Moisture',
                               'EIV Reaction' = 'Reaction',
@@ -212,12 +212,12 @@ cf <- read_csv('results\\models_resolution_comprops.csv') %>%
                               'Species Richness' = 'sp_richness',
                               "Shannon's Diversity" = 'Shannon')) %>%
   mutate_cond(dev_explained < 0, dev_explained = NA) %>%
-  mutate(index2 = fct_recode(factor(index, levels = c('SLP', 'PCR', 'PRC', 'TLC', 'TP3',
+  mutate(index2 = fct_recode(factor(index, levels = c('SLP', 'PLC', 'PRC', 'TLC', 'TP3',
                                                       'TP5', 'TR3', 'TR5', 'VR3', 'VR5',
                                                       'HLI', 'MSVF', 'MVS', 'MBI', 'MDI',
                                                       'HSD', 'TWI', 'MFA')),
                              Slope = 'SLP',
-                             `Planform Curvature` = 'PCR',
+                             `Planform Curvature` = 'PLC',
                              `Profile Curvature` = 'PRC',
                              `Total Curvature` = 'TLC',
                              `Topographic position index 3×3` = 'TP3',
