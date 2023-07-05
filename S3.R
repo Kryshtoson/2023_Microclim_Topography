@@ -149,7 +149,7 @@ df <- read_csv('results\\meta_results\\models_resolution_species.csv') %>%
                              `Visible Sky` = 'MVS',
                              `Diffuse Solar radiation` = 'MBI',
                              `Direct Solar radiation` = 'MDI',
-                             `Hillshadeness 180°` = 'HSD',
+                             `Hill Shade 180°` = 'HSD',
                              `Topographic Wetness Index` = 'TWI')) %>%
   filter(index2 != index)
 
@@ -231,7 +231,7 @@ cf <- read_csv('results\\meta_results\\models_resolution_comprops.csv') %>%
                              `Visible Sky` = 'MVS',
                              `Diffuse Solar radiation` = 'MBI',
                              `Direct Solar radiation` = 'MDI',
-                             `Hillshadeness 180°` = 'HSD',
+                             `Hill Shade 180°` = 'HSD',
                              `Topographic Wetness Index` = 'TWI')) %>%
   filter(index2 != index)
 cf %>% write_csv('results\\COMPROPS_resolution_models.csv')
