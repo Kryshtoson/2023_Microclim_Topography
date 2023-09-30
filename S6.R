@@ -184,6 +184,15 @@ random_mods_comprops |>
   shared = rsq_full - (r2_elevation_pure + r2_topography_pure)) |>
   arrange(-diff) |>
   select(species, diff, r2_elevation_pure, r2_topography_pure, shared)
+
+#' Values for table 1
+read_csv('data\\Comprop_means.csv') |>
+  rename_with(~gsub("_", ".", .x, fixed = TRUE)) |>
+  summarise_all(list(mean = mean, sd = sd, min = min, max = max), na.rm = T) |>
+  pivot_longer(everything()) |>
+  separate(name, c('name', 'fn'), sep = '_') |>
+  pivot_wider(names_from = fn)
+
 #-------------------------------------------------------------------------
 # END OF THE CODE S5
 #-------------------------------------------------------------------------

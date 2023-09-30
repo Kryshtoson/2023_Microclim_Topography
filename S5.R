@@ -170,6 +170,7 @@ bind_rows(best_models_species, best_models_comprops) |>
                         levels = c('fine', 'coarse'),
                         labels = c('Fine resolution', 'Coarse resolution'))) |>
   filter(group %in% c('Coarse resolution', 'Fine resolution')) |>
+  mutate(macro = factor(macro, levels = c('Distribution of species', 'Community attributes'))) |>
   mutate(species_abb = shcut(species)) -> step
 
 step |>
