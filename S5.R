@@ -265,6 +265,9 @@ replicate(999, COMPROPS_out$butall |>
   ) |>
   unlist() -> COMPROPS_ratios
 
+mean(COMPROPS_ratios)
+mean(SPECIES_ratios)
+
 t.test(COMPROPS_ratios - SPECIES_ratios, mu = 0, alternative = 'greater')
 quantile(COMPROPS_ratios - SPECIES_ratios, .05)
 quantile(COMPROPS_ratios - SPECIES_ratios, .13085)
