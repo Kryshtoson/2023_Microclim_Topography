@@ -20,6 +20,7 @@ sites <- read_sf('raw_input\\MCdata_v2-0_GEO_vegetation.gpkg') %>%
   arrange(logger_ID)
 veg_data <- read_csv('data\\species_data_wide.csv')
 fairly_common <- names(veg_data)[colSums(veg_data) > 50][-1]
+fairly_common <- fairly_common[fairly_common != 'Taraxacum sp.']
 bank <- read_csv('data\\Morphometric_parameters_bank.csv')
 comprop <- read_csv('data\\Comprop_means.csv')
 
@@ -217,22 +218,22 @@ cf <- read_csv('results\\meta_results\\models_resolution_comprops.csv') %>%
                                                       'HLI', 'MSVF', 'MVS', 'MBI', 'MDI',
                                                       'HSD', 'TWI', 'MFA')),
                              Slope = 'SLP',
-                             `Planform Curvature` = 'PLC',
-                             `Profile Curvature` = 'PRC',
-                             `Total Curvature` = 'TLC',
-                             `Topographic position index 3×3` = 'TP3',
-                             `Topographic position index 5×5` = 'TP5',
-                             `Terrain Ruggedness Index 3×3` = 'TR3',
-                             `Terrain Ruggedness Index 5×5` = 'TR5',
-                             `Vector Ruggedenss Measure 3×3` = 'VR3',
-                             `Vector Ruggedenss Measure 5×5` = 'VR5',
-                             `Head Load Index` = 'HLI',
-                             `Sky View Factor` = 'MSVF',
-                             `Visible Sky` = 'MVS',
-                             `Diffuse Solar radiation` = 'MBI',
-                             `Direct Solar radiation` = 'MDI',
-                             `Hill Shade 180°` = 'HSD',
-                             `Topographic Wetness Index` = 'TWI')) %>%
+                             `Planform Curvature (PLC)` = 'PLC',
+                             `Profile Curvature (PRC)` = 'PRC',
+                             `Total Curvature (TLC)` = 'TLC',
+                             `Topographic position index 3×3 (TP3)` = 'TP3',
+                             `Topographic position index 5×5 (TP5)` = 'TP5',
+                             `Terrain Ruggedness Index 3×3 (TR3)` = 'TR3',
+                             `Terrain Ruggedness Index 5×5 (TR5)` = 'TR5',
+                             `Vector Ruggedenss Measure 3×3 (VR3)` = 'VR3',
+                             `Vector Ruggedenss Measure 5×5 (VR5)` = 'VR5',
+                             `Head Load Index (HLI)` = 'HLI',
+                             `Sky View Factor (MSVF)` = 'MSVF',
+                             `Visible Sky (MVS)` = 'MVS',
+                             `Diffuse Solar radiation (MBI)` = 'MBI',
+                             `Direct Solar radiation (MDI)` = 'MDI',
+                             `Hill Shade 180 (HSD)°` = 'HSD',
+                             `Topographic Wetness Index (TWI)` = 'TWI')) %>%
   filter(index2 != index)
 cf %>% write_csv('results\\COMPROPS_resolution_models.csv')
 cf %>%
